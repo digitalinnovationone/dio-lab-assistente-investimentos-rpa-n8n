@@ -1,0 +1,10 @@
+perfil,produto,minimo,rentabilidade
+Conservador,Poupança,100,6.2%
+Conservador,CDB Liquidez Diária,1000,12.5%
+Conservador,Tesouro Selic,500,13.0%
+Moderado,CDB Prefixado,1000,14.0%
+Moderado,Fundo Multimercado,5000,16.0%
+Moderado,Tesouro IPCA+,1000,IPCA+6.0%
+Arrojado,Ações ETF,500,Variável
+Arrojado,Fundo de Ações,10000,Variável
+Arrojado,Criptomoedas,100,Variável
