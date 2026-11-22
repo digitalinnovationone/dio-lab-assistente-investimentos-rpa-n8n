@@ -1,0 +1,276 @@
+{
+  "name": "Assistente de Investimentos - RPA e IA",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clientes-investimentos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160001",
+      "name": "Webhook de clientes",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        180
+      ],
+      "webhookId": "4ea1b34f-0c99-491e-9af7-776a8c61e601"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.clientes",
+        "options": {}
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160002",
+      "name": "Separar clientes",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -650,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160003",
+      "name": "Ler opções de investimento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function parseCsv(text) {\n  const linhas = [];\n  let linha = [];\n  let campo = '';\n  let entreAspas = false;\n  for (let i = 0; i < text.length; i++) {\n    const caractere = text[i];\n    if (caractere === '\"' && entreAspas && text[i + 1] === '\"') {\n      campo += '\"';\n      i++;\n    } else if (caractere === '\"') {\n      entreAspas = !entreAspas;\n    } else if (caractere === ',' && !entreAspas) {\n      linha.push(campo);\n      campo = '';\n    } else if ((caractere === '\\n' || caractere === '\\r') && !entreAspas) {\n      if (caractere === '\\r' && text[i + 1] === '\\n') i++;\n      linha.push(campo);\n      if (linha.some((valor) => valor.trim() !== '')) linhas.push(linha);\n      linha = [];\n      campo = '';\n    } else {\n      campo += caractere;\n    }\n  }\n  if (campo || linha.length) {\n    linha.push(campo);\n    if (linha.some((valor) => valor.trim() !== '')) linhas.push(linha);\n  }\n  if (linhas.length < 2) throw new Error('O CSV não contém linhas de investimento.');\n  const cabecalhos = linhas.shift().map((valor) => valor.trim().replace(/^\\uFEFF/, ''));\n  const esperados = ['perfil', 'produto', 'minimo', 'rentabilidade'];\n  if (esperados.some((campoEsperado) => !cabecalhos.includes(campoEsperado))) {\n    throw new Error('Cabeçalhos do CSV inválidos; esperados: perfil,produto,minimo,rentabilidade.');\n  }\n  const investimentos = linhas.map((valores) => {\n    const registro = Object.fromEntries(cabecalhos.map((cabecalho, indice) => [cabecalho, (valores[indice] || '').trim()]));\n    const minimo = Number(registro.minimo);\n    if (!registro.perfil || !registro.produto || !Number.isFinite(minimo)) {\n      throw new Error('Registro inválido no CSV de investimentos.');\n    }\n    return { ...registro, minimo };\n  });\n  return investimentos;\n}\nconst resposta = $input.first().json;\nconst csv = resposta.data ?? resposta.body ?? resposta;\nif (typeof csv !== 'string') throw new Error('A resposta HTTP do CSV não é texto.');\nreturn [{ json: { investimentos: parseCsv(csv) } }];"
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160004",
+      "name": "Converter CSV para JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160005",
+      "name": "Aguardar dados de clientes e investimentos",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -150,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const clientes = $('Separar clientes').all().map((item) => item.json);\nconst investimentos = $('Converter CSV para JSON').first().json.investimentos;\nif (!Array.isArray(clientes) || clientes.length === 0) throw new Error('O webhook não recebeu clientes.');\nif (!Array.isArray(investimentos) || investimentos.length === 0) throw new Error('Não há investimentos para cruzar.');\nreturn clientes.map((cliente) => {\n  const saldo = Number(cliente.saldo);\n  if (!cliente.nome || !cliente.email || !cliente.perfil || !Number.isFinite(saldo)) {\n    throw new Error(`Dados inválidos para o cliente ${cliente.nome || '(sem nome)'}.`);\n  }\n  const ativos = investimentos.filter((opcao) => opcao.perfil === cliente.perfil && opcao.minimo <= saldo);\n  return { json: { cliente: { ...cliente, saldo }, ativos } };\n});"
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160006",
+      "name": "Cruzar perfil e saldo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Escreva uma mensagem curta, empática e profissional em português brasileiro para este cliente, apresentando apenas os ativos elegíveis listados. Contextualize o perfil e o saldo sem prometer rentabilidade. Se não houver ativos elegíveis, explique com gentileza que nenhuma opção da base atende ao saldo mínimo atual. Dados: ' + JSON.stringify({ cliente: $json.cliente, ativos: $json.ativos }) }}",
+        "options": {
+          "systemMessage": "Você é um assistente informativo de investimentos. Use somente os dados recebidos, nunca prometa ganhos nem trate a mensagem como recomendação financeira individual definitiva. Cite que rentabilidade passada ou indicada não garante resultados futuros."
+        }
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160007",
+      "name": "Gerar mensagem com IA",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 512,
+          "temperature": 0.4
+        }
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160008",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const preparados = $('Cruzar perfil e saldo').all();\nconst respostas = $input.all();\nfunction mensagemEstatica(cliente, ativos) {\n  const saudacao = `Olá, ${cliente.nome}! Considerando seu perfil ${cliente.perfil} e o saldo informado de R$ ${cliente.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, `;\n  if (ativos.length === 0) return saudacao + 'não encontramos opções da base cujo investimento mínimo caiba no saldo atual. Você pode rever as alternativas quando seu planejamento mudar.';\n  const produtos = ativos.map((ativo) => `${ativo.produto} (mínimo R$ ${ativo.minimo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}; rentabilidade indicada: ${ativo.rentabilidade})`).join('; ');\n  return saudacao + `estas opções da base são compatíveis com o valor mínimo: ${produtos}. Avalie riscos e condições antes de investir; rentabilidade indicada não garante resultados futuros.`;\n}\nreturn preparados.map((item, indice) => {\n  const dado = item.json;\n  const respostaIa = respostas[indice]?.json || {};\n  const gerada = [respostaIa.output, respostaIa.text, respostaIa.response].find((valor) => typeof valor === 'string' && valor.trim());\n  const cliente = dado.cliente;\n  const ativos = dado.ativos;\n  return { json: {\n    cliente,\n    ativos_recomendados: ativos,\n    mensagem: gerada ? gerada.trim() : mensagemEstatica(cliente, ativos),\n    fonte_mensagem: gerada ? 'ia' : 'template_fallback'\n  } };\n});"
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160009",
+      "name": "Formatar resposta com fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "5dd91a8a-6c47-4afd-990b-690b2f160010",
+      "name": "Responder ao webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook de clientes": {
+      "main": [
+        [
+          {
+            "node": "Separar clientes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ler opções de investimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar clientes": {
+      "main": [
+        [
+          {
+            "node": "Aguardar dados de clientes e investimentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler opções de investimento": {
+      "main": [
+        [
+          {
+            "node": "Converter CSV para JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converter CSV para JSON": {
+      "main": [
+        [
+          {
+            "node": "Aguardar dados de clientes e investimentos",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Aguardar dados de clientes e investimentos": {
+      "main": [
+        [
+          {
+            "node": "Cruzar perfil e saldo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cruzar perfil e saldo": {
+      "main": [
+        [
+          {
+            "node": "Gerar mensagem com IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar mensagem com IA": {
+      "main": [
+        [
+          {
+            "node": "Formatar resposta com fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar resposta com fallback": {
+      "main": [
+        [
+          {
+            "node": "Responder ao webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gerar mensagem com IA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1a5b750-4498-4ed1-b017-409eb4cc8af4",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

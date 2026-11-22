@@ -83,7 +83,7 @@ Antes de começar, explore o repositório base que já contém a estrutura inici
 
 1. **Página de Clientes (`docs/index.html`):** Uma página HTML hospedada no GitHub Pages com uma lista de clientes fictícios contendo nome, email, saldo e perfil de investidor (Conservador, Moderado ou Arrojado). Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n).
 2. **Dados de Investimentos (`docs/data.csv`):** Um arquivo CSV também hospedado no GitHub Pages com opções de investimento organizadas por perfil. Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv).
-3. **Script de RPA (`src/extrair_clientes.ipynb`):** Um notebook Python que acessa a página de clientes e extrai os dados da tabela usando BeautifulSoup.
+3. **Script de RPA (`rpa/extrair_clientes.ipynb`):** Um notebook Python que acessa a página de clientes e extrai os dados da tabela usando BeautifulSoup.
 
 > 🤖 **Por que o script é considerado RPA?** Ele faz exatamente o que um humano faria manualmente: abre uma página, lê os dados de uma tabela e os envia para outro sistema. A diferença é que o "robô" (código) executa isso automaticamente. Essa abordagem é útil quando não existe uma API disponível ou quando precisamos integrar sistemas legados.
 
@@ -91,9 +91,9 @@ Antes de começar, explore o repositório base que já contém a estrutura inici
 
 1. Faça um **fork** do repositório base para sua conta do GitHub
 2. Crie uma conta no [N8N Cloud](https://n8n.io/) ou instale localmente
-3. Abra o notebook `src/extrair_clientes.ipynb` no [Google Colab](https://colab.research.google.com/) e execute para entender o fluxo de extração
+3. Instale as dependências listadas em `requirements.txt` e abra `rpa/extrair_clientes.ipynb` no [Google Colab](https://colab.research.google.com/) ou Jupyter
 
-> 💡 **Atenção:** O script já extrai os dados, mas o envio ao N8N está comentado (`TODO`). Você vai configurar a URL do Webhook após criá-lo na próxima etapa.
+> 💡 **Atenção:** Configure a variável `N8N_WEBHOOK_URL` antes de executar a célula de envio. O notebook tenta primeiro a página publicada e recorre a `docs/index.html` quando ela está indisponível ou sem dados.
 
 ### Etapa 3: Desenvolva o Workflow no N8N
 
@@ -120,6 +120,37 @@ Conecte o Agente de IA do N8N a um modelo como Gemini ou GPT para:
 - Gerar mensagens únicas e personalizadas
 - Criar recomendações mais inteligentes e humanizadas
 
+## Solução Implementada
+
+### Executar o RPA
+
+Na raiz do repositório, instale as dependências:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Configure a URL de produção do Webhook do n8n como variável de ambiente e execute `rpa/extrair_clientes.ipynb` no Jupyter ou Google Colab. No PowerShell:
+
+```powershell
+$env:N8N_WEBHOOK_URL = "https://SEU_N8N/webhook/clientes-investimentos"
+jupyter notebook rpa/extrair_clientes.ipynb
+```
+
+O notebook lê os campos pelos seletores `.nome`, `.email`, `.saldo` e `.perfil` da tabela `#clientes`. Converte o saldo brasileiro para número e envia `{"clientes": [...]}` por POST JSON. `CLIENTES_URL` pode substituir a página remota; se a requisição falhar ou não trouxer linhas de clientes, o arquivo `docs/index.html` é usado localmente. Falhas no envio são registradas e interrompem a execução.
+
+### Importar e configurar o workflow
+
+No n8n, importe `n8n/workflow.json` pelo menu de workflows. No nó **Ler opções de investimento**, ajuste a URL do CSV para a página GitHub Pages do seu fork, caso não utilize a base pública original. Configure uma credencial de API do Google Gemini no nó **Google Gemini Chat Model**; nenhuma chave é armazenada no arquivo exportado. O workflow pode ser executado sem a credencial: falhas da IA seguem pelo caminho de erro e usam o template estático.
+
+Ative o workflow e copie sua URL de produção (com o caminho `clientes-investimentos`) para `N8N_WEBHOOK_URL`. A URL de teste do n8n só funciona enquanto o workflow estiver em modo de escuta. O Webhook recebe POST e responde com um item por cliente contendo `cliente`, `ativos_recomendados`, `mensagem` e `fonte_mensagem`.
+
+### Decisões de cruzamento e geração
+
+O CSV é baixado por HTTP e convertido em registros JSON usando os cabeçalhos exatos `perfil`, `produto`, `minimo` e `rentabilidade`. O cruzamento exige igualdade de perfil e seleciona somente produtos cujo mínimo seja menor ou igual ao saldo disponível. Assim, nenhuma opção de outro perfil ou acima do saldo é apresentada; se nenhuma opção for elegível, isso é informado sem inventar ativos.
+
+O agente recebe apenas os dados do cliente e as opções já filtradas. O prompt pede uma mensagem breve, empática e em português brasileiro, proíbe promessas de retorno e orienta a sinalizar quando não houver opções adequadas. Se o modelo falhar ou não retornar texto, o workflow mantém a mesma estrutura de resposta com um template estático.
+
 ## Entregáveis
 
 ### MVP (Mínimo Viável)
@@ -141,10 +172,11 @@ Conecte o Agente de IA do N8N a um modelo como Gemini ou GPT para:
 ```
 📁 dio-lab-assistente-investimentos-rpa-n8n/
 ├── 📄 README.md
-├── 📁 src/
-│   └── 📄 extrair_clientes.ipynb   # ✅ Notebook Python (já implementado, falta só o TODO)
+├── 📁 rpa/
+│   └── 📄 extrair_clientes.ipynb   # Notebook de extração e envio ao Webhook
 ├── 📁 n8n/
-│   └── 📄 workflow.json            # 🎯 Seu desafio: exportar o workflow aqui
+│   └── 📄 workflow.json            # Workflow importável
+├── 📄 requirements.txt             # Dependências do RPA
 └── 📁 docs/
     ├── 📄 index.html               # ✅ Página de clientes (já implementado)
     └── 📄 data.csv                 # ✅ Opções de investimento (já implementado)
