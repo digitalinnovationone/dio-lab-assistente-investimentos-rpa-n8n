@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="./assistente-investimentos-rpa-ia-generativa-banner.png"
+    src="./cover_840x560.gif"
     alt="Assistente de Investimentos com RPA e IA Generativa"
     width="100%"
   >
@@ -81,78 +81,5 @@ Requer Python 3.10 ou superior. O repositório ainda não possui `requirements.t
 1. Clone o repositório e entre na pasta do projeto:
 
    ```bash
-   git clone https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git
+   git clone [https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git](https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git)
    cd dio-lab-assistente-investimentos-rpa-n8n
-   ```
-
-2. Crie e ative um ambiente virtual:
-
-   ```bash
-   python -m venv .venv
-   ```
-
-   macOS/Linux:
-
-   ```bash
-   source .venv/bin/activate
-   ```
-
-   Windows PowerShell:
-
-   ```powershell
-   .venv\Scripts\Activate.ps1
-   ```
-
-3. Instale as dependências usadas pelo notebook:
-
-   ```bash
-   python -m pip install --upgrade pip
-   python -m pip install requests beautifulsoup4 notebook
-   ```
-
-   Pandas e `python-dotenv` são opcionais para o código atual. Instale-os apenas se forem necessários para extensões futuras:
-
-   ```bash
-   python -m pip install pandas python-dotenv
-   ```
-
-4. Inicie o Jupyter Notebook e abra o notebook de extração:
-
-   ```bash
-   jupyter notebook rpa/extrair_clientes.ipynb
-   ```
-
-5. Para executar o pipeline completo, importe `n8n/workflow.json` no n8n, configure a credencial do Google Gemini, ative o workflow e conecte o notebook ao webhook `clientes`.
-
-### Variáveis de Ambiente e Credenciais
-
-O notebook atual não carrega um arquivo `.env` nem envia o POST ao n8n. Se adicionar código Python para ler essas variáveis, instale `python-dotenv` e crie um `.env` local, sem incluir valores reais no repositório:
-
-```env
-N8N_WEBHOOK_URL=
-GEMINI_API_KEY=
-OPENAI_API_KEY=
-
-```
-O workflow do n8n deve receber a credencial do Google Gemini pelo gerenciador de credenciais do próprio n8n. Nunca versione arquivos `.env` nem chaves de API.
-
-**Rafael Ornelas Tozato**
-
-Engenharia Química | Garantia da Qualidade | Governança 4.0
-
-## 📬 CONTATOS E PERFIS
-
-💻 **PROJETOS E PORTFÓLIOS**
-* Ecossistema de Aplicativos: [tozato-ai-core.vercel.app](https://tozato-ai-core.vercel.app)
-* H-Folio Professional: [h-folio-I0.vercel.app](https://h-folio-I0.vercel.app)
-
-🐙 **CÓDIGOS E REPOSITÓRIOS**
-* GitHub: [github.com/Rafael-TOZATO](https://github.com/Rafael-TOZATO)
-
-✍️ **ARTIGOS E PUBLICAÇÕES**
-* Medium: [medium.com/@ornelas.tozato](https://medium.com/@ornelas.tozato)
-* Comunidade DEV: [dev.to/rafaeltozato](https://dev.to/rafaeltozato)
-
-💼 **CONTATO**
-* LinkedIn: [linkedin.com/in/rafaeltozato81](https://www.linkedin.com/in/rafaeltozato81)
-* E-mail: ornelas.tozato@gmail.com
