@@ -1,0 +1,82 @@
+{
+  "name": "Assistente de Investimentos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clientes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a1b1c1d-0001-4a1a-8a1a-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "assistente-investimentos"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.clientes",
+        "options": {}
+      },
+      "id": "1a1b1c1d-0002-4a1a-8a1a-000000000002",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [20, 0]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Cliente: {{ $json.nome }} | Saldo: {{ $json.saldo }} | Perfil: {{ $json.perfil }}",
+        "options": {
+          "systemMessage": "Você é um assistente financeiro de uma corretora. Opções de investimento disponíveis por perfil:\n- Conservador: Poupança (6,2% a.a., mínimo R$ 100), CDB Liquidez Diária (12,5% a.a., mínimo R$ 1.000), Tesouro Selic (13,0% a.a., mínimo R$ 500)\n- Moderado: CDB Prefixado (14,0% a.a., mínimo R$ 1.000), Fundo Multimercado (16,0% a.a., mínimo R$ 5.000), Tesouro IPCA+ (IPCA+6,0% a.a., mínimo R$ 1.000)\n- Arrojado: Ações ETF (rentabilidade variável, mínimo R$ 500), Fundo de Ações (rentabilidade variável, mínimo R$ 10.000), Criptomoedas (rentabilidade variável, mínimo R$ 100)\n\nCom base no perfil e no saldo do cliente, escolha a opção mais adequada (respeitando o valor mínimo) e escreva uma mensagem de recomendação personalizada, cordial e objetiva, em português do Brasil. Não invente produtos fora da lista acima."
+        }
+      },
+      "id": "1a1b1c1d-0003-4a1a-8a1a-000000000003",
+      "name": "Agente de IA",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash"
+      },
+      "id": "1a1b1c1d-0004-4a1a-8a1a-000000000004",
+      "name": "Modelo de Chat Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [220, 220]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "1a1b1c1d-0005-4a1a-8a1a-000000000005",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Split Out", "type": "main", "index": 0 }]]
+    },
+    "Split Out": {
+      "main": [[{ "node": "Agente de IA", "type": "main", "index": 0 }]]
+    },
+    "Modelo de Chat Google Gemini": {
+      "ai_languageModel": [[{ "node": "Agente de IA", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Agente de IA": {
+      "main": [[{ "node": "Responder Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

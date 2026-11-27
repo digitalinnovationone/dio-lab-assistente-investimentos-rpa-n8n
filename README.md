@@ -1,172 +1,85 @@
-# Criando um Assistente de Investimentos com RPA e IA Generativa
+<p align="center">
+  <img
+    src="./cover_840x560.gif"
+    alt="Assistente de Investimentos com RPA e IA Generativa"
+    width="100%"
+  >
+</p>
 
-## Descrição
+<h1 align="center">Assistente de Investimentos com RPA e IA Generativa</h1>
 
-Aprenda na prática como criar um fluxo de automação inteligente combinando técnicas de RPA (Robotic Process Automation) com workflows de IA no N8N.
+<p align="center">
+  <a href="https://www.python.org/">
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&amp;logo=python&amp;logoColor=white" alt="Python 3.10+">
+  </a>
+  <a href="https://n8n.io/">
+    <img src="https://img.shields.io/badge/n8n-orchestration-EA4B71?style=for-the-badge&amp;logo=n8n&amp;logoColor=white" alt="Orquestração n8n">
+  </a>
+  <a href="https://platform.openai.com/docs/">
+    <img src="https://img.shields.io/badge/OpenAI-GPT--4%20(opcional)-412991?style=for-the-badge&amp;logo=openai&amp;logoColor=white" alt="OpenAI GPT-4 opcional, não configurado no workflow atual">
+  </a>
+  <a href="https://ai.google.dev/">
+    <img src="https://img.shields.io/badge/Google-Gemini%201.5%20Flash-8E75B2?style=for-the-badge&amp;logo=googlegemini&amp;logoColor=white" alt="Google Gemini 1.5 Flash">
+  </a>
+  <a href="https://jupyter.org/">
+    <img src="https://img.shields.io/badge/Jupyter-Notebook-F37626?style=for-the-badge&amp;logo=jupyter&amp;logoColor=white" alt="Jupyter Notebook">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="Licença MIT, conforme declaração do projeto">
+  </a>
+  <a href="https://codeql.github.com/">
+    <img src="https://img.shields.io/badge/CodeQL-security%20analysis-0F80C1?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="CodeQL — análise de segurança">
+  </a>
+  <img src="https://img.shields.io/badge/Quality-ISO%209001-0078D4?style=for-the-badge" alt="Referência de qualidade ISO 9001">
+  <img src="https://img.shields.io/badge/Lean%20Six%20Sigma-Green%20Belt-6A1B9A?style=for-the-badge" alt="Lean Six Sigma Green Belt">
+</p>
 
-Neste desafio, você vai construir um assistente de investimentos automatizado. O fluxo começa com a extração de dados de clientes em uma página web usando Python, passa pela orquestração de um workflow no N8N e termina com a geração de mensagens personalizadas para cada perfil de investidor.
+## Sobre o Projeto
 
-O projeto foi pensado para ser simples e acessível, mesmo para quem está dando os primeiros passos em Python e automação. A ideia é que você entenda o conceito de RPA de forma leve e aplique tudo em um cenário realista do mercado financeiro.
+Este projeto educacional demonstra como combinar **RPA em Python**, **orquestração de workflows no n8n** e **IA generativa** em um cenário de atendimento relacionado ao mercado financeiro.
 
-## Objetivo do Projeto
+O notebook extrai dados de uma página de demonstração, organiza informações de clientes — como nome, saldo e perfil de investidor — e prevê o envio desses dados a um webhook do n8n. O workflow processa cada cliente e usa um agente de IA para gerar uma mensagem informativa e personalizada de acordo com o perfil e o saldo.
 
-Desenvolver um pipeline de automação que:
+O projeto não executa transações nem acessa contas financeiras. As mensagens geradas são demonstrativas e não constituem recomendação de investimento.
 
-1. **Coleta dados de clientes** de uma página web simulada usando Python
-2. **Processa as informações** através de um workflow no N8N
-3. **Cruza perfis de investidor** com uma base de opções de investimento
-4. **Gera mensagens personalizadas** para cada cliente
+> **Estado atual da integração:** o notebook ainda contém um TODO para enviar os dados ao webhook, e o workflow exportado está inativo. Para executar o pipeline de ponta a ponta, configure o webhook e as credenciais no n8n e ative o workflow.
 
-Ao final, você terá um sistema funcional que demonstra como empresas do setor financeiro podem automatizar a comunicação com clientes de forma inteligente.
+## Fluxo de Funcionamento (Pipeline de Dados)
 
-## Arquitetura do Projeto
+1. **Extração de dados — Web Scraping/RPA**  
+   O notebook usa `requests` e `BeautifulSoup` para buscar e interpretar a tabela de clientes da [página de demonstração da DIO](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/).
 
-```mermaid
-flowchart LR
-  %% Pipeline RPA + N8N + IA (máx. 7 caixinhas)
+2. **Processamento e tratamento**  
+   Cada linha da tabela é convertida em um dicionário Python com os campos `nome`, `email`, `saldo` e `perfil`. O notebook atual não usa Pandas; a transformação é feita com estruturas nativas do Python.
 
-  subgraph GH["GitHub Pages"]
-    A["Clientes<br>(docs/index.html)"]
-    E["Investimentos (docs/data.csv)"]
-  end
+3. **Orquestração no n8n**  
+   O arquivo `n8n/workflow.json` define um webhook POST chamado `clientes`, seguido pelo nó **Split Out**, que separa os dados em itens individuais. O notebook ainda precisa ser conectado ao webhook para enviar a lista de clientes.
 
-  subgraph PY["RPA (Python)"]
-    B["Extrair Clientes"]
-  end
+4. **IA Generativa**  
+   O agente de IA recebe o perfil e o saldo do cliente. O workflow atual está configurado para usar **Google Gemini 1.5 Flash** e inclui opções ilustrativas de investimento no prompt. **OpenAI GPT-4 não está conectado no workflow atual**; pode ser considerado como alternativa mediante configuração de um nó e de credenciais apropriadas.
 
-  subgraph N8["N8N (Workflow)"]
-    C["Webhook<br>(Entrada)"]
-    D["Cruzar Dados<br>(Clientes x Investimentos)"]
-    M["Gerar Mensagem<br>(Template/LLM)"]
-    C --> D --> M
-  end
+5. **Resultado Final**  
+   Quando o workflow estiver ativo e configurado, o nó **Responder Webhook** devolve o texto gerado pelo agente. A resposta pode então ser apresentada ou utilizada pelo sistema que chamou o webhook.
 
-  subgraph OUT["Saída"]
-    O["Mensagens Personalizadas"]
-  end
+## Tecno-Stack e Ferramentas
 
-  A <-->|HTTP| B --> C
-  E <-->|HTTP| D
-  M --> O
+- **Python 3.10+:** linguagem recomendada para executar o notebook.
+- **Requests e BeautifulSoup:** dependências usadas atualmente para buscar e interpretar o HTML.
+- **Pandas:** não é usado no notebook atual; pode ser adicionado se o processamento tabular evoluir.
+- **Jupyter Notebook:** ambiente para executar `rpa/extrair_clientes.ipynb`.
+- **n8n:** workflow exportado em `n8n/workflow.json`; requer importação, configuração das credenciais e ativação.
+- **Google Gemini 1.5 Flash:** modelo configurado no workflow atual.
+- **OpenAI GPT-4:** alternativa possível, ainda não configurada neste repositório.
+- **Qualidade e Governança 4.0:** referências a ISO 9001 e Lean Six Sigma Green Belt relacionadas a práticas de qualidade e melhoria contínua; os selos não representam certificação deste projeto.
+- **CodeQL:** selo informativo sobre a ferramenta. Não há workflow CodeQL configurado no repositório.
+- **Licença MIT:** selo incluído conforme solicitado. O repositório ainda não contém um arquivo `LICENSE`; adicione-o na raiz para formalizar a licença.
 
-  %% Estilos
-  classDef source fill:#E3F2FD,stroke:#1E88E5,stroke-width:1px,color:#0D47A1;
-  classDef rpa fill:#E8F5E9,stroke:#43A047,stroke-width:1px,color:#1B5E20;
-  classDef n8n fill:#FFF3E0,stroke:#FB8C00,stroke-width:1px,color:#E65100;
-  classDef out fill:#FCE4EC,stroke:#D81B60,stroke-width:1px,color:#880E4F;
+## Como Executar o Projeto Localmente
 
-  class A,E source;
-  class B rpa;
-  class C,D,M n8n;
-  class O out;
+Requer Python 3.10 ou superior. O repositório ainda não possui `requirements.txt`, então as dependências são instaladas diretamente com `pip`.
 
-```
+1. Clone o repositório e entre na pasta do projeto:
 
-## Tecnologias e Ferramentas
-
-O projeto utiliza ferramentas gratuitas e acessíveis, organizadas conforme cada etapa do fluxo:
-
-| Etapa | Ferramenta | Função |
-|-------|-----------|--------|
-| Hospedagem | GitHub Pages | Servir a página de clientes e o CSV de investimentos |
-| Extração (RPA) | Python + BeautifulSoup | Coletar dados dos clientes via web scraping |
-| Orquestração | N8N | Processar dados, cruzar perfis e gerar mensagens |
-| Geração com IA | Agente de IA no N8N | Criar mensagens personalizadas com LLM (desafio extra) |
-
-Além dessas, você pode usar IAs generativas como **Gemini**, **Claude** ou **ChatGPT** como copilotos para auxiliar na escrita de código e tirar dúvidas ao longo do desenvolvimento.
-
-## Roteiro do Desafio
-
-### Etapa 1: Entenda o Projeto
-
-Antes de começar, explore o repositório base que já contém a estrutura inicial:
-
-1. **Página de Clientes (`docs/index.html`):** Uma página HTML hospedada no GitHub Pages com uma lista de clientes fictícios contendo nome, email, saldo e perfil de investidor (Conservador, Moderado ou Arrojado). Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n).
-2. **Dados de Investimentos (`docs/data.csv`):** Um arquivo CSV também hospedado no GitHub Pages com opções de investimento organizadas por perfil. Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv).
-3. **Script de RPA (`src/extrair_clientes.ipynb`):** Um notebook Python que acessa a página de clientes e extrai os dados da tabela usando BeautifulSoup.
-
-> 🤖 **Por que o script é considerado RPA?** Ele faz exatamente o que um humano faria manualmente: abre uma página, lê os dados de uma tabela e os envia para outro sistema. A diferença é que o "robô" (código) executa isso automaticamente. Essa abordagem é útil quando não existe uma API disponível ou quando precisamos integrar sistemas legados.
-
-### Etapa 2: Configure o Ambiente
-
-1. Faça um **fork** do repositório base para sua conta do GitHub
-2. Crie uma conta no [N8N Cloud](https://n8n.io/) ou instale localmente
-3. Abra o notebook `src/extrair_clientes.ipynb` no [Google Colab](https://colab.research.google.com/) e execute para entender o fluxo de extração
-
-> 💡 **Atenção:** O script já extrai os dados, mas o envio ao N8N está comentado (`TODO`). Você vai configurar a URL do Webhook após criá-lo na próxima etapa.
-
-### Etapa 3: Desenvolva o Workflow no N8N
-
-Este é o coração do desafio! Monte um fluxo que:
-
-1. Receba os dados dos clientes via Webhook (copie a URL gerada e configure no script Python)
-2. Leia o arquivo `docs/data.csv` com as opções de investimento
-3. Cruze o perfil de cada cliente com a opção adequada
-4. Gere uma mensagem de recomendação para cada cliente
-
-### Etapa 4 (MVP): Mensagens Estáticas
-
-Para a versão mínima, use templates de mensagem fixos baseados no perfil:
-
-- **Conservador:** Foco em renda fixa e segurança
-- **Moderado:** Mix equilibrado entre renda fixa e variável
-- **Arrojado:** Ênfase em ações e maior potencial de retorno
-
-### Etapa 5 (Desafio): Integração com IA Generativa
-
-Conecte o Agente de IA do N8N a um modelo como Gemini ou GPT para:
-
-- Analisar o contexto do cliente (saldo, perfil)
-- Gerar mensagens únicas e personalizadas
-- Criar recomendações mais inteligentes e humanizadas
-
-## Entregáveis
-
-### MVP (Mínimo Viável)
-
-- [ ] Repositório forkado com o workflow N8N implementado
-- [ ] Workflow N8N exportado (`n8n/workflow.json`) com mensagens estáticas
-- [ ] Script de RPA integrado ao Webhook do N8N
-- [ ] Print ou vídeo demonstrando o fluxo funcionando de ponta a ponta
-
-### Desafio Completo
-
-- [ ] Todos os itens do MVP
-- [ ] Integração com Agente de IA no N8N
-- [ ] Mensagens geradas dinamicamente via LLM
-- [ ] Documentação explicando as decisões técnicas
-
-## Estrutura do Repositório
-
-```
-📁 dio-lab-assistente-investimentos-rpa-n8n/
-├── 📄 README.md
-├── 📁 src/
-│   └── 📄 extrair_clientes.ipynb   # ✅ Notebook Python (já implementado, falta só o TODO)
-├── 📁 n8n/
-│   └── 📄 workflow.json            # 🎯 Seu desafio: exportar o workflow aqui
-└── 📁 docs/
-    ├── 📄 index.html               # ✅ Página de clientes (já implementado)
-    └── 📄 data.csv                 # ✅ Opções de investimento (já implementado)
-```
-
-## Prompts Úteis para Copilotos de IA
-
-| Tarefa | Sugestão de Prompt |
-|--------|-------------------|
-| Gerar dados fictícios | "Crie 10 clientes fictícios com nome, email, saldo e perfil de investidor em JSON" |
-| Entender código | "Explique o que faz a biblioteca BeautifulSoup em Python" |
-| Debugar erros | "Meu script Python está dando erro X, o que pode ser?" |
-| Montar workflow | "Como configuro um webhook no N8N para receber dados JSON?" |
-
-## Referências
-
-- [Documentação do N8N](https://docs.n8n.io/)
-- [BeautifulSoup: Web Scraping com Python](https://realpython.com/beautiful-soup-web-scraper-python/)
-- [GitHub Pages: Guia Rápido](https://pages.github.com/)
-
----
-
-**Bons estudos e mãos à obra** 🚀
-
-Se tiver dúvidas, lembre-se: a melhor forma de aprender é experimentando. Erre, corrija e celebre cada pequena vitória no caminho.
+   ```bash
+   git clone [https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git](https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git)
+   cd dio-lab-assistente-investimentos-rpa-n8n
