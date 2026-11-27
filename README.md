@@ -83,3 +83,28 @@ Requer Python 3.10 ou superior. O repositório ainda não possui `requirements.t
    ```bash
    git clone [https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git](https://github.com/Rafael-TOZATO/dio-lab-assistente-investimentos-rpa-n8n.git)
    cd dio-lab-assistente-investimentos-rpa-n8n
+
+## 📬 CONTATOS E PERFIS
+
+💻 **PROJECTS & PORTFOLIOS**
+* App Ecosystem / Dev Hub: https://tozato-ai-core.vercel.app
+* H-Folio Professional: https://h-folio-I0.vercel.app
+
+🧩 **AGENSI**
+* Creator: https://www.agensi.io/creators/rafael-ornelas-tozato
+
+🐙 **CODES & REPOSITORIES**
+* GitHub: https://github.com/Rafael-TOZATO
+
+✍️ **ARTICLES & PUBLICATIONS**
+* Medium: https://medium.com/@ornelas.tozato
+* DEV Community: https://dev.to/rafaeltozato
+
+🪟 **MICROSOFT LEARN**
+* Perfil: https://learn.microsoft.com/pt-br/users/rafaelornelastozato-2209
+
+💼 **LINKEDIN**
+* Perfil Profissional: https://www.linkedin.com/in/rafaeltozato81
+
+📬 **CONTACT**
+* E-mail: ornelas.tozato@gmail.com
